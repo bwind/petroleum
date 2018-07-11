@@ -14,7 +14,7 @@ class Task:
         if not self.is_ready(**inputs):
             return TaskStatus(status=TaskStatus.WAITING, inputs=inputs)
         try:
-            outputs = self.run(**inputs or {})
+            outputs = self.run(**inputs)
         except Exception as exc:
             return TaskStatus(status=TaskStatus.FAILED,
                               exception=exc,

@@ -13,13 +13,12 @@ class Workflow:
         task.workflow_data = self.workflow_data
         task_status = task._run(**inputs)
         if task_status.status == TaskStatus.COMPLETED:
-            if task.get_next_task(**task_status.outputs or {}) is None:
+            next_task = task.get_next_task(**task_status.outputs)
+            if next_task is None:
                 return WorkflowStatus(status=WorkflowStatus.COMPLETED,
                                       outputs=task_status.outputs)
             else:
-                return self._run_tasks(
-                    task.get_next_task(**task_status.outputs),
-                    **task_status.outputs)
+                return self._run_tasks(next_task, **task_status.outputs)
         elif task_status.status == TaskStatus.FAILED:
             return WorkflowStatus(status=WorkflowStatus.FAILED,
                                   exception=task_status.exception)
