@@ -5,8 +5,8 @@ class WorkflowStatus:
 
     def __init__(self, status, inputs=None, outputs=None, exception=None):
         self.status = status
-        self.inputs = inputs
-        self.outputs = outputs
+        self.inputs = inputs or {}
+        self.outputs = outputs or {}
         self.exception = exception
 
     def __repr__(self):

@@ -7,9 +7,9 @@ class ExclusiveChoice(Task):
         self.conditional_tasks = []
         super().__init__(name=None, *args, **kwargs)
 
-    def get_next_task(self, inputs):
+    def get_next_task(self, **inputs):
         for conditional_task in self.conditional_tasks:
-            result = conditional_task.condition(inputs)
+            result = conditional_task.condition(**inputs)
             if not isinstance(result, bool):
                 raise Exception('Condition %s did not return bool' %
                                 conditional_task.condition)
@@ -24,5 +24,5 @@ class ExclusiveChoice(Task):
             conditional_task.default = True
         self.conditional_tasks.append(conditional_task)
 
-    def run(self, inputs):
+    def run(self, **inputs):
         return inputs

@@ -15,11 +15,15 @@ with description('task'):
 with description('workflow') as self:
     with before.each:
         self.task = Task()
+        self.workflow = Workflow(start_task=self.task)
+
+    with context('when resuming'):
+        with it('accepts arbitrary keyword arguments as inputs'):
+            self.workflow.resume(foo='bar')
 
     with context('when task is not ready'):
         with before.each:
-            self.task.is_ready = lambda i: False
-            self.workflow = Workflow(start_task=self.task)
+            self.task.is_ready = lambda **i: False
 
         with it('returns suspended workflow status'):
             workflow_status = self.workflow.start()
@@ -27,7 +31,7 @@ with description('workflow') as self:
 
         with it('returns workflow status with task inputs'):
             inputs = {'foo': 'bar'}
-            workflow_status = self.workflow.start(inputs=inputs)
+            workflow_status = self.workflow.start(**inputs)
             expect(workflow_status.inputs).to(equal(inputs))
 
 
