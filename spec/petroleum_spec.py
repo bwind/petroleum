@@ -44,6 +44,6 @@ with description('workflow data') as self:
     with it('has access to workflow data'):
         expect(self.task.workflow_data['foo']).to(equal('bar'))
 
-    with it('does not modify workflow data'):
+    with it('modifies workflow data'):
         self.task.workflow_data['foo'] = 'baz'
-        expect(self.workflow.workflow_data['foo']).to(equal('bar'))
+        expect(self.workflow.workflow_data['foo']).to(equal('baz'))

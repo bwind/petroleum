@@ -23,6 +23,3 @@ class ExclusiveChoice(Task):
         if len(self.conditional_tasks) == 0:
             conditional_task.default = True
         self.conditional_tasks.append(conditional_task)
-
-    def run(self, **inputs):
-        return inputs

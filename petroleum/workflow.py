@@ -1,6 +1,5 @@
 from petroleum.task_status import TaskStatus
 from petroleum.workflow_status import WorkflowStatus
-import copy
 
 
 class Workflow:
@@ -11,9 +10,7 @@ class Workflow:
 
     def _run_tasks(self, task, **inputs):
         self.current_task = task
-        # Create a copy of this Workflow's workflow_data to avoid Tasks
-        # modifying workflow data
-        task.workflow_data = copy.deepcopy(self.workflow_data)
+        task.workflow_data = self.workflow_data
         task_status = task._run(**inputs)
         if task_status.status == TaskStatus.COMPLETED:
             if task.get_next_task(**task_status.outputs or {}) is None:

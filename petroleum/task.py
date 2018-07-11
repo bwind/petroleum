@@ -10,31 +10,30 @@ class Task:
     def __repr__(self):
         return '<%s (%s)>' % (self.__class__.__name__, self.name)
 
-    def get_next_task(self, **inputs):
-        return self.next_task
-
     def _run(self, **inputs):
         if not self.is_ready(**inputs):
-            task_status = TaskStatus(status=TaskStatus.WAITING, inputs=inputs)
-        else:
-            try:
-                outputs = self.run(**inputs or {})
-                if hasattr(self, 'on_complete'):
-                    self.on_complete()
-            except Exception as exc:
-                task_status = TaskStatus(status=TaskStatus.FAILED,
-                                         exception=exc,
-                                         inputs=inputs)
-            else:
-                task_status = TaskStatus(status=TaskStatus.COMPLETED,
-                                         outputs=outputs)
-        return task_status
+            return TaskStatus(status=TaskStatus.WAITING, inputs=inputs)
+        try:
+            outputs = self.run(**inputs or {})
+        except Exception as exc:
+            return TaskStatus(status=TaskStatus.FAILED,
+                              exception=exc,
+                              inputs=inputs)
+        task_result = TaskStatus(status=TaskStatus.COMPLETED, outputs=outputs)
+        self.on_complete(task_result)
+        return task_result
 
     def connect(self, task):
         self.next_task = task
 
+    def get_next_task(self, **inputs):
+        return self.next_task
+
     def is_ready(self, **inputs):
         return True
+
+    def on_complete(self, task_result):
+        pass
 
     def run(self, **inputs):
         pass
