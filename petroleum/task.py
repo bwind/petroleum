@@ -26,7 +26,7 @@ class Task:
     def connect(self, task):
         self.next_task = task
 
-    def get_next_task(self, **inputs):
+    def get_next_task(self, task_status):
         return self.next_task
 
     def is_ready(self, **inputs):

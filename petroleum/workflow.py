@@ -13,7 +13,7 @@ class Workflow:
         task.workflow_data = self.workflow_data
         task_status = task._run(**inputs)
         if task_status.status == TaskStatus.COMPLETED:
-            next_task = task.get_next_task(**task_status.outputs)
+            next_task = task.get_next_task(task_status)
             if next_task is None:
                 return WorkflowStatus(status=WorkflowStatus.COMPLETED,
                                       outputs=task_status.outputs)
