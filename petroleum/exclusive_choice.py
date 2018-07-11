@@ -3,9 +3,9 @@ from petroleum.task import Task
 
 
 class ExclusiveChoice(Task):
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name=None, *args, **kwargs):
         self.conditional_tasks = []
-        super().__init__(name, *args, **kwargs)
+        super().__init__(name=None, *args, **kwargs)
 
     def get_next_task(self, inputs):
         for conditional_task in self.conditional_tasks:

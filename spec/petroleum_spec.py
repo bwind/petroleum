@@ -1,6 +1,6 @@
 from expects import expect, equal, raise_error
-from mamba import before, description, it
-from petroleum import Task, Workflow
+from mamba import before, context, description, it
+from petroleum import Task, Workflow, WorkflowStatus
 
 
 with description('task'):
@@ -10,6 +10,25 @@ with description('task'):
     with it('accepts arbitrary keyword arguments as task data'):
         task = Task(foo='bar')
         expect(task.foo).to(equal('bar'))
+
+
+with description('workflow') as self:
+    with before.each:
+        self.task = Task()
+
+    with context('when task is not ready'):
+        with before.each:
+            self.task.is_ready = lambda i: False
+            self.workflow = Workflow(start_task=self.task)
+
+        with it('returns suspended workflow status'):
+            workflow_status = self.workflow.start()
+            expect(workflow_status.status).to(equal(WorkflowStatus.SUSPENDED))
+
+        with it('returns workflow status with task inputs'):
+            inputs = {'foo': 'bar'}
+            workflow_status = self.workflow.start(inputs=inputs)
+            expect(workflow_status.inputs).to(equal(inputs))
 
 
 with description('workflow data') as self:

@@ -3,8 +3,9 @@ class WorkflowStatus:
     SUSPENDED = 'SUSPENDED'
     FAILED = 'FAILED'
 
-    def __init__(self, status, outputs=None, exception=None):
+    def __init__(self, status, inputs=None, outputs=None, exception=None):
         self.status = status
+        self.inputs = inputs
         self.outputs = outputs
         self.exception = exception
 

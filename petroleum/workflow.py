@@ -17,7 +17,8 @@ class Workflow:
         task_status = task._run(inputs)
         if task_status.status == TaskStatus.COMPLETED:
             if task.get_next_task(task_status.outputs) is None:
-                return WorkflowStatus(status=WorkflowStatus.COMPLETED)
+                return WorkflowStatus(status=WorkflowStatus.COMPLETED,
+                                      outputs=task_status.outputs)
             else:
                 return self._run_tasks(task.get_next_task(task_status.outputs),
                                        inputs=task_status.outputs)
@@ -26,7 +27,7 @@ class Workflow:
                                   exception=task_status.exception)
         elif task_status.status == TaskStatus.WAITING:
             return WorkflowStatus(status=WorkflowStatus.SUSPENDED,
-                                  inputs=task_status.outputs)
+                                  inputs=task_status.inputs)
 
     def restart(self, inputs=None):
         return self.start(inputs)
