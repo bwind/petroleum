@@ -19,7 +19,9 @@ class Task:
             return TaskStatus(status=TaskStatus.FAILED,
                               exception=exc,
                               inputs=inputs)
-        task_result = TaskStatus(status=TaskStatus.COMPLETED, outputs=outputs)
+        task_result = TaskStatus(status=TaskStatus.COMPLETED,
+                                 inputs=inputs,
+                                 outputs=outputs)
         self.on_complete(task_result)
         return task_result
 
