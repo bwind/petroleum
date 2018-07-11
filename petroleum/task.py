@@ -2,9 +2,10 @@ from petroleum.task_status import TaskStatus
 
 
 class Task:
-    def __init__(self, name):
+    def __init__(self, name=None, **task_data):
         self.name = name
         self.next_task = None
+        self.__dict__.update(task_data)
 
     def __repr__(self):
         return '<%s (%s)>' % (self.__class__.__name__, self.name)
