@@ -1,0 +1,2 @@
+class PetroleumException(Exception):
+    pass

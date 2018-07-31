@@ -47,3 +47,16 @@ with description('workflow data') as self:
     with it('modifies workflow data'):
         self.task.workflow_data['foo'] = 'baz'
         expect(self.workflow.workflow_data['foo']).to(equal('baz'))
+
+
+with description('json encoder'):
+    with context('task.to_json'):
+        with it('returns json'):
+            expect(Task().to_json()).to(equal(
+                '{"name": null, "next_task": null}'))
+
+    with context('workflow.to_json'):
+        with it('returns json'):
+            start_task = Task()
+            expect(Workflow(start_task=start_task).to_json()).to(equal(
+                '{"current_task": {"name": null, "next_task": null}, "start_task": {"name": null, "next_task": null}, "workflow_data": {}}'))  # noqa: E501

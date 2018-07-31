@@ -1,7 +1,8 @@
+from petroleum.json_encoder import ToJSONMixin
 from petroleum.task_status import TaskStatus
 
 
-class Task:
+class Task(ToJSONMixin):
     def __init__(self, name=None, **task_data):
         self.name = name
         self.next_task = None

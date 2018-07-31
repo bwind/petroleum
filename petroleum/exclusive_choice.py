@@ -1,4 +1,5 @@
 from petroleum.conditional_task import ConditionalTask
+from petroleum.exceptions import PetroleumException
 from petroleum.task import Task
 
 
@@ -11,8 +12,8 @@ class ExclusiveChoice(Task):
         for conditional_task in self.conditional_tasks:
             result = conditional_task.condition(task_status)
             if not isinstance(result, bool):
-                raise Exception('Condition %s did not return bool' %
-                                conditional_task.condition)
+                raise PetroleumException('Condition %s did not return bool' %
+                                         conditional_task.condition)
             if result is True:
                 return conditional_task.task
         return next(conditional_task.task for conditional_task in
