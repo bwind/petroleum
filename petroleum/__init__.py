@@ -1,3 +1,8 @@
+class PetroleumObject:
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+
 from petroleum.conditional_task import ConditionalTask  # noqa: F401
 from petroleum.exclusive_choice import ExclusiveChoice  # noqa: F401
 from petroleum.task import Task  # noqa: F401

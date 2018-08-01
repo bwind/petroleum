@@ -1,9 +1,10 @@
+from petroleum import PetroleumObject
 from petroleum.json_encoder import ToJSONMixin
 from petroleum.task_status import TaskStatus
 from petroleum.workflow_status import WorkflowStatus
 
 
-class Workflow(ToJSONMixin):
+class Workflow(PetroleumObject, ToJSONMixin):
     def __init__(self, start_task, **workflow_data):
         self.start_task = start_task
         self.current_task = self.start_task

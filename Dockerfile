@@ -3,6 +3,8 @@ FROM python:3.7
 ENV appdir /app
 ENV srcdir ${appdir}/petroleum
 
+RUN pip install --upgrade pip
+
 RUN mkdir ${appdir}
 WORKDIR ${srcdir}
 
