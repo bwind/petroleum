@@ -5,9 +5,9 @@ from petroleum.workflow_status import WorkflowStatus
 
 
 class Workflow(PetroleumObject, ToJSONMixin):
-    def __init__(self, start_task, **workflow_data):
+    def __init__(self, start_task, current_task=None, **workflow_data):
         self.start_task = start_task
-        self.current_task = self.start_task
+        self.current_task = current_task or self.start_task
         self.workflow_data = workflow_data
 
     def _run_tasks(self, task, **inputs):
