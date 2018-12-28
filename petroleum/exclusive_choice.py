@@ -16,11 +16,8 @@ class ExclusiveChoice(Task):
                                          conditional_task.condition)
             if result is True:
                 return conditional_task.task
-        return next(conditional_task.task for conditional_task in
-                    self.conditional_tasks if conditional_task.default is True)
+        return self.next_task
 
-    def connect(self, task, condition):
+    def connect_if(self, task, condition):
         conditional_task = ConditionalTask(task=task, condition=condition)
-        if len(self.conditional_tasks) == 0:
-            conditional_task.default = True
         self.conditional_tasks.append(conditional_task)
