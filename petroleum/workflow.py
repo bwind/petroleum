@@ -3,7 +3,7 @@ from petroleum import PetroleumObject
 from petroleum.json_encoder import ToJSONMixin
 from petroleum.task_status import TaskStatusEnum
 from petroleum.workflow_status import WorkflowStatus
-from petroluem.task_log import TaskLogEntry
+from petroleum.task_log import TaskLogEntry
 
 
 class Workflow(PetroleumObject, ToJSONMixin):
