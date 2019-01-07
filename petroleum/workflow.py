@@ -7,21 +7,25 @@ from petroleum.task_log import TaskLogEntry
 
 
 class Workflow(PetroleumObject, ToJSONMixin):
-    def __init__(self, start_task, id_to_task_mapper, state=None):
+    def __init__(
+        self, start_task, task_to_id_mapper, id_to_task_mapper, state=None
+    ):
         self.start_task = start_task
         self.id_to_task_mapper = id_to_task_mapper
+        self.task_to_id_mapper = task_to_id_mapper
         self._init_state(state)
 
     def _init_state(self, state):
         self.state = state
-        if not hasattr(self.state, 'task_log'):
+        if not hasattr(self.state, "task_log"):
             self.state.task_log = []
-        if not hasattr(self.state, 'next_task'):
-            self.state.next_task_id = self.start_task.id
+        if not hasattr(self.state, "next_task"):
+            self.state.next_task_id = self.task_to_id_mapper(self.start_task)
 
     def _run_with_log(self, task, inputs):
-        log_entry = TaskLogEntry(started_at=datetime.now(),
-                                 id=task.id)
+        log_entry = TaskLogEntry(
+            started_at=datetime.now(), id=self.task_to_id_mapper(task)
+        )
         self.state.task_log.append(log_entry)
         task_status = task._run(**inputs)
         log_entry._update_with_status(task_status)
@@ -32,7 +36,7 @@ class Workflow(PetroleumObject, ToJSONMixin):
         task_status = self._run_with_log(task, inputs)
         if task_status.status == TaskStatusEnum.COMPLETED:
             next_task = task.get_next_task(task_status)
-            self.state.next_task_id = next_task.id
+            self.state.next_task_id = self.task_to_id_mapper(next_task)
             if next_task is None:
                 return WorkflowStatus(
                     status=WorkflowStatus.COMPLETED,
