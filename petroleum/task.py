@@ -40,4 +40,4 @@ class Task(PetroleumObject, ToJSONMixin):
         pass
 
     def run(self, **inputs):
-        pass
+        raise NotImplementedError()
