@@ -16,17 +16,19 @@ class Workflow(PetroleumObject, ToJSONMixin):
         self._init_state(state)
 
     def _init_state(self, state):
-        self.state = state
+        self.state = state or {}
         if not hasattr(self.state, "task_log"):
-            self.state.task_log = []
-        if not hasattr(self.state, "next_task"):
-            self.state.next_task_id = self.task_to_id_mapper(self.start_task)
+            self.state["task_log"] = []
+        if not hasattr(self.state, "next_task_id"):
+            self.state["next_task_id"] = self.task_to_id_mapper(
+                self.start_task
+            )
 
     def _run_with_log(self, task, inputs):
         log_entry = TaskLogEntry(
             started_at=datetime.now(), id=self.task_to_id_mapper(task)
         )
-        self.state.task_log.append(log_entry)
+        self.state["task_log"].append(log_entry)
         task_status = task._run(**inputs)
         log_entry._update_with_status(task_status)
         return task_status
@@ -36,7 +38,7 @@ class Workflow(PetroleumObject, ToJSONMixin):
         task_status = self._run_with_log(task, inputs)
         if task_status.status == TaskStatusEnum.COMPLETED:
             next_task = task.get_next_task(task_status)
-            self.state.next_task_id = self.task_to_id_mapper(next_task)
+            self.state["next_task_id"] = self.task_to_id_mapper(next_task)
             if next_task is None:
                 return WorkflowStatus(
                     status=WorkflowStatus.COMPLETED,
@@ -54,10 +56,13 @@ class Workflow(PetroleumObject, ToJSONMixin):
             )
 
     def _get_next_task(self):
-        return self.id_to_task_mapper(self.state.next_task_id)
+        return self.id_to_task_mapper(self.state["next_task_id"])
 
     def get_state(self) -> dict:
         return self.state
 
     def resume(self, **inputs):
         return self._run_tasks(self._get_next_task(), **inputs)
+
+    def start(self, **inputs):
+        return self.resume(**inputs)
