@@ -46,7 +46,7 @@ with description("json encoder"):
                 equal('{"_name": null, "_next_task": null}')
             )
 
-    with context("workflow.to_json"):
+    with context("workflow.get_state"):
         with it("returns json"):
             start_task = Task()
             expect(
@@ -54,9 +54,9 @@ with description("json encoder"):
                     start_task=start_task,
                     task_to_id_mapper=lambda task: "id",
                     id_to_task_mapper=lambda id: start_task,
-                ).to_json()
+                ).get_state()
             ).to(
                 equal(
-                    '{"current_task": {"name": null, "next_task": null}, "start_task": {"name": null, "next_task": null}, "workflow_data": {}}'  # noqa: E501
+                    {'task_log': [], 'next_task_id': 'id'}
                 )
             )
