@@ -1,6 +1,6 @@
 from datetime import datetime
 from dataclasses import dataclass
-from task_status import TaskStatus
+from petroleum.task_status import TaskStatus
 
 
 @dataclass
