@@ -8,11 +8,19 @@ from petroleum.task_log import TaskLogEntry
 
 class Workflow(PetroleumObject, ToJSONMixin):
     def __init__(
-        self, start_task, task_to_id_mapper, id_to_task_mapper, state=None
+        self, start_task, id_to_task_mapper, task_to_id_mapper=None, state=None
     ):
+        '''Constructor for a Petroleum workflow
+
+        :param start_task: The start_task object for the workflow
+        :param id_to_task_mapper: A function which maps an id to a task
+        :param task_to_id_mapper: A function which maps a task to its id
+                                 (optional, default is `task.id`)
+        :param state: Existing state from a paused workflow, if any
+        '''
         self.start_task = start_task
         self.id_to_task_mapper = id_to_task_mapper
-        self.task_to_id_mapper = task_to_id_mapper
+        self.task_to_id_mapper = task_to_id_mapper or (lambda task: task.id)
         self._init_state(state)
 
     def _init_state(self, state):
