@@ -1,6 +1,6 @@
 from petroleum import PetroleumObject
 from petroleum.json_encoder import ToJSONMixin
-from petroleum.task_status import TaskStatus
+from petroleum.task_status import TaskStatus, TaskStatusEnum
 
 
 class Task(PetroleumObject, ToJSONMixin):
@@ -14,16 +14,16 @@ class Task(PetroleumObject, ToJSONMixin):
 
     def _run(self, **inputs):
         if not self.is_ready(**inputs):
-            return TaskStatus(status=TaskStatus.WAITING, inputs=inputs)
+            return TaskStatus(status=TaskStatusEnum.WAITING, inputs=inputs)
         try:
             outputs = self.run(**inputs)
         except Exception as exc:
-            return TaskStatus(status=TaskStatus.FAILED,
-                              exception=exc,
-                              inputs=inputs)
-        task_result = TaskStatus(status=TaskStatus.COMPLETED,
-                                 inputs=inputs,
-                                 outputs=outputs)
+            return TaskStatus(
+                status=TaskStatusEnum.FAILED, exception=exc, inputs=inputs
+            )
+        task_result = TaskStatus(
+            status=TaskStatusEnum.COMPLETED, inputs=inputs, outputs=outputs
+        )
         self.on_complete(task_result)
         return task_result
 
@@ -40,4 +40,4 @@ class Task(PetroleumObject, ToJSONMixin):
         pass
 
     def run(self, **inputs):
-        pass
+        raise NotImplementedError()

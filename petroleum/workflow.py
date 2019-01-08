@@ -1,38 +1,77 @@
+from datetime import datetime
+from dataclasses import asdict
 from petroleum import PetroleumObject
 from petroleum.json_encoder import ToJSONMixin
-from petroleum.task_status import TaskStatus
+from petroleum.task_status import TaskStatusEnum
 from petroleum.workflow_status import WorkflowStatus
+from petroleum.task_log import TaskLogEntry
+from petroleum.workflow_state import WorkflowState
 
 
 class Workflow(PetroleumObject, ToJSONMixin):
-    def __init__(self, start_task, current_task=None, **workflow_data):
+    def __init__(
+        self, start_task, id_to_task_mapper, task_to_id_mapper=None, state=None
+    ):
+        '''Constructor for a Petroleum workflow
+
+        :param start_task: The start_task object for the workflow
+        :param id_to_task_mapper: A function which maps an id to a task
+        :param task_to_id_mapper: A function which maps a task to its id
+                                 (optional, default is `task.id`)
+        :param state: Existing state from a paused workflow, if any
+        '''
         self.start_task = start_task
-        self.current_task = current_task or self.start_task
-        self.workflow_data = workflow_data
+        self.id_to_task_mapper = id_to_task_mapper
+        self.task_to_id_mapper = task_to_id_mapper or (lambda task: task.id)
+        self._init_state(state)
+
+    def _init_state(self, state):
+        state = state or {}
+        if not hasattr(state, "next_task_id"):
+            state["next_task_id"] = self.task_to_id_mapper(
+                self.start_task
+            )
+        self.state = WorkflowState(**state)
+
+    def _run_with_log(self, task, inputs):
+        log_entry = TaskLogEntry(
+            started_at=datetime.now(), id=self.task_to_id_mapper(task)
+        )
+        self.state.task_log.append(log_entry)
+        task_status = task._run(**inputs)
+        log_entry._update_with_status(task_status)
+        return task_status
 
     def _run_tasks(self, task, **inputs):
         self.current_task = task
-        task.workflow_data = self.workflow_data
-        task_status = task._run(**inputs)
-        if task_status.status == TaskStatus.COMPLETED:
+        task_status = self._run_with_log(task, inputs)
+        if task_status.status == TaskStatusEnum.COMPLETED:
             next_task = task.get_next_task(task_status)
             if next_task is None:
-                return WorkflowStatus(status=WorkflowStatus.COMPLETED,
-                                      outputs=task_status.outputs)
+                return WorkflowStatus(
+                    status=WorkflowStatus.COMPLETED,
+                    outputs=task_status.outputs,
+                )
             else:
+                self.state.next_task_id = self.task_to_id_mapper(next_task)
                 return self._run_tasks(next_task, **task_status.outputs)
-        elif task_status.status == TaskStatus.FAILED:
-            return WorkflowStatus(status=WorkflowStatus.FAILED,
-                                  exception=task_status.exception)
-        elif task_status.status == TaskStatus.WAITING:
-            return WorkflowStatus(status=WorkflowStatus.SUSPENDED,
-                                  inputs=task_status.inputs)
+        elif task_status.status == TaskStatusEnum.FAILED:
+            return WorkflowStatus(
+                status=WorkflowStatus.FAILED, exception=task_status.exception
+            )
+        elif task_status.status == TaskStatusEnum.WAITING:
+            return WorkflowStatus(
+                status=WorkflowStatus.SUSPENDED, inputs=task_status.inputs
+            )
 
-    def restart(self, **inputs):
-        return self.start(**inputs)
+    def _get_next_task(self):
+        return self.id_to_task_mapper(self.state.next_task_id)
+
+    def get_state(self) -> dict:
+        return asdict(self.state)
 
     def resume(self, **inputs):
-        return self._run_tasks(self.current_task, **inputs)
+        return self._run_tasks(self._get_next_task(), **inputs)
 
     def start(self, **inputs):
-        return self._run_tasks(self.start_task, **inputs)
+        return self.resume(**inputs)
