@@ -12,8 +12,8 @@ jobs:
           command: pip install -r requirements.txt -r requirements-dev.txt
       - save_cache:
           key: dependency-cache-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
-        paths:
-          - pip
+          paths:
+            - pip
   test:
     docker:
       - image: circleci/python:3.7
