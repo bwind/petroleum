@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.7
+      - image: python:3.7
     steps:
       - checkout
       - restore_cache:
@@ -16,7 +16,7 @@ jobs:
             - pip
   test:
     docker:
-      - image: circleci/python:3.7
+      - image: python:3.7
     steps:
       - checkout
       - run: mamba
