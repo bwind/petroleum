@@ -1,8 +1,3 @@
-class PetroleumObject:
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
-
-
 from petroleum.conditional_task import ConditionalTask  # noqa: F401
 from petroleum.exclusive_choice import ExclusiveChoice  # noqa: F401
 from petroleum.task import Task  # noqa: F401
@@ -10,4 +5,4 @@ from petroleum.task_status import TaskStatusEnum, TaskStatus  # noqa: F401
 from petroleum.workflow import Workflow  # noqa: F401
 from petroleum.workflow_status import WorkflowStatus  # noqa: F401
 
-name = 'petroleum'
+name = "petroleum"

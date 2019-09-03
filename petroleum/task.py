@@ -1,16 +1,15 @@
-from petroleum import PetroleumObject
+from dataclasses import dataclass
+
 from petroleum.json_encoder import ToJSONMixin
 from petroleum.task_status import TaskStatus, TaskStatusEnum
 
 
-class Task(PetroleumObject, ToJSONMixin):
-    def __init__(self, name=None, **task_data):
-        self._name = name
-        self._next_task = None
-        self.__dict__.update(task_data)
-
-    def __repr__(self):
-        return '<%s (%s)>' % (self.__class__.__name__, self._name)
+@dataclass
+class Task(ToJSONMixin):
+    id: str = None
+    name: str = None
+    task_data: dict = None
+    next_task: object = None
 
     def _run(self, **inputs):
         if not self.is_ready(**inputs):
@@ -28,10 +27,10 @@ class Task(PetroleumObject, ToJSONMixin):
         return task_result
 
     def connect(self, task):
-        self._next_task = task
+        self.next_task = task
 
     def get_next_task(self, task_status):
-        return self._next_task
+        return self.next_task
 
     def is_ready(self, **inputs):
         return True

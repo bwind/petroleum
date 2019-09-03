@@ -1,22 +1,21 @@
-import json
 from expects import expect, equal, raise_error
 from mamba import before, context, description, it
-from petroleum import (
-    Task,
-    Workflow,
-    WorkflowStatus,
-    ExclusiveChoice,
-    WorkflowStatus,
-)
+from petroleum import Task, Workflow, ExclusiveChoice, WorkflowStatus
 
 
 with description("task"):
     with it("can instantiate without arguments"):
         expect(lambda: Task()).not_to(raise_error(Exception))
 
-    with it("accepts arbitrary keyword arguments as task data"):
-        task = Task(foo="bar")
-        expect(task.foo).to(equal("bar"))
+    with it("accepts task data"):
+        task = Task(task_data={"foo": "bar"})
+        expect(task.task_data["foo"]).to(equal("bar"))
+
+    with it("equals to another task"):
+        expect(Task(id="bar")).to(equal(Task(id="bar")))
+
+    with it("differs from another task"):
+        expect(Task(id="bar")).not_to(equal(Task(id="X")))
 
 
 with description("workflow") as self:
@@ -26,6 +25,28 @@ with description("workflow") as self:
             start_task=self.task,
             task_to_id_mapper=lambda task: "task_id",
             id_to_task_mapper=lambda task_id: self.task,
+        )
+
+    with it("equals to another workflow"):
+        workflow1 = Workflow(
+            start_task=self.task,
+            task_to_id_mapper=None,
+            id_to_task_mapper=None,
+        )
+        workflow2 = Workflow(
+            start_task=self.task,
+            task_to_id_mapper=None,
+            id_to_task_mapper=None,
+        )
+        expect(workflow1).to(equal(workflow2))
+
+    with it("differs from another workflow"):
+        expect(self.workflow).not_to(
+            equal(
+                Workflow(
+                    start_task=self.task, id_to_task_mapper=lambda foo: foo
+                )
+            )
         )
 
     with context("when resuming"):
@@ -50,7 +71,9 @@ with description("json encoder"):
     with context("task.to_json"):
         with it("returns json"):
             expect(Task().to_json()).to(
-                equal('{"_name": null, "_next_task": null}')
+                equal(
+                    '{"id": null, "name": null, "next_task": null, "task_data": null}'  # noqa: E501
+                )
             )
 
 
@@ -103,8 +126,8 @@ with description("run workflow"):
             expect(status.status).to(equal(WorkflowStatus.SUSPENDED))
 
             state = self.workflow.get_state()
-            expect(len(state['task_log'])).to(equal(2))
-            expect(state['next_task_id']).to(equal('next_task'))
+            expect(len(state["task_log"])).to(equal(2))
+            expect(state["next_task_id"]).to(equal("next_task"))
 
             self.tasks["next_task"].is_ready = lambda **args: True
 
@@ -115,8 +138,8 @@ with description("run workflow"):
                 id_to_task_mapper=lambda task_id: self.tasks[task_id],
                 state=state,
             )
-            expect(len(state['task_log'])).to(equal(2))
+            expect(len(state["task_log"])).to(equal(2))
 
             status = workflow.resume()
             expect(status.status).to(equal(WorkflowStatus.COMPLETED))
-            expect(len(state['task_log'])).to(equal(4))
+            expect(len(state["task_log"])).to(equal(4))

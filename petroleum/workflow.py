@@ -1,6 +1,5 @@
 from datetime import datetime
-from dataclasses import asdict
-from petroleum import PetroleumObject
+from dataclasses import asdict, dataclass
 from petroleum.json_encoder import ToJSONMixin
 from petroleum.task_status import TaskStatusEnum
 from petroleum.workflow_status import WorkflowStatus
@@ -8,29 +7,38 @@ from petroleum.task_log import TaskLogEntry
 from petroleum.workflow_state import WorkflowState
 
 
-class Workflow(PetroleumObject, ToJSONMixin):
+@dataclass
+class Workflow(ToJSONMixin):
+    start_task: object
+    id_to_task_mapper: object
+    task_to_id_mapper: object = None
+    state: object = None
+
     def __init__(
         self, start_task, id_to_task_mapper, task_to_id_mapper=None, state=None
     ):
-        '''Constructor for a Petroleum workflow
+        """Constructor for a Petroleum workflow
 
         :param start_task: The start_task object for the workflow
         :param id_to_task_mapper: A function which maps an id to a task
         :param task_to_id_mapper: A function which maps a task to its id
                                  (optional, default is `task.id`)
-        :param state: Existing state from a paused workflow, if any
-        '''
+        :param state: Existing state from a suspended workflow, if any
+        """
         self.start_task = start_task
         self.id_to_task_mapper = id_to_task_mapper
         self.task_to_id_mapper = task_to_id_mapper or (lambda task: task.id)
         self._init_state(state)
 
+    def __eq__(self, other):
+        return (
+            self.start_task == other.start_task and self.state == other.state
+        )
+
     def _init_state(self, state):
         state = state or {}
         if not hasattr(state, "next_task_id"):
-            state["next_task_id"] = self.task_to_id_mapper(
-                self.start_task
-            )
+            state["next_task_id"] = self.task_to_id_mapper(self.start_task)
         self.state = WorkflowState(**state)
 
     def _run_with_log(self, task, inputs):

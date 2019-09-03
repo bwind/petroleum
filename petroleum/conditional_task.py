@@ -1,9 +1,10 @@
-from petroleum import PetroleumObject
+from dataclasses import dataclass
+
 from petroleum.json_encoder import ToJSONMixin
 
 
-class ConditionalTask(PetroleumObject, ToJSONMixin):
-    def __init__(self, task, condition, default=False):
-        self.task = task
-        self.condition = condition
-        self.default = default
+@dataclass
+class ConditionalTask(ToJSONMixin):
+    task: object
+    condition: object
+    default: bool = False
