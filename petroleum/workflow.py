@@ -62,7 +62,7 @@ class Workflow(ToJSONMixin):
                 )
             else:
                 self.state.next_task_id = self.task_to_id_mapper(next_task)
-                return self._run_tasks(next_task, **task_status.outputs)
+                return self._run_tasks(next_task, **task_status.outputs or {})
         elif task_status.status == TaskStatusEnum.FAILED:
             return WorkflowStatus(
                 status=WorkflowStatus.FAILED, exception=task_status.exception

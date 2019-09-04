@@ -3,9 +3,9 @@ from typing import Any
 
 
 class TaskStatusEnum:
-    WAITING = 'WAITING'
-    COMPLETED = 'COMPLETED'
-    FAILED = 'FAILED'
+    WAITING = "WAITING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
 
 
 @dataclass
@@ -14,6 +14,3 @@ class TaskStatus:
     inputs: dict = field(default_factory=dict)
     outputs: dict = field(default_factory=dict)
     exception: Any = None  # noqa: E701
-
-    def __repr__(self):
-        return '<%s (%s)>' % (self.__class__.__name__, self.status)
