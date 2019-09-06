@@ -1,6 +1,8 @@
 from datetime import datetime
 from dataclasses import asdict, dataclass
 
+from dacite import from_dict
+
 from petroleum.json_encoder import ToJSONMixin
 from petroleum.task_status import TaskStatusEnum
 from petroleum.workflow_status import WorkflowStatus
@@ -40,7 +42,7 @@ class Workflow(ToJSONMixin):
         state = state or {}
         if "next_task_id" not in state:
             state["next_task_id"] = self.task_to_id_mapper(self.start_task)
-        self.state = WorkflowState(**state)
+        self.state = from_dict(data_class=WorkflowState, data=state)
 
     def _run_with_log(self, task, inputs):
         log_entry = TaskLogEntry(
@@ -80,6 +82,8 @@ class Workflow(ToJSONMixin):
         return asdict(self.state)
 
     def resume(self, **inputs):
+        if len(self.state.task_log) > 0:
+            inputs = {**self.state.task_log[-1].status.inputs, **inputs}
         return self._run_tasks(self._get_next_task(), **inputs)
 
     def start(self, **inputs):

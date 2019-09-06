@@ -1,19 +1,20 @@
 import setuptools
 
 setuptools.setup(
-    name='petroleum',
+    name="petroleum",
     version="0.0.1",
-    author='Bas Wind',
-    author_email='mailtobwind+petroleum@gmail.com',
-    description='A pure workflow engine for Python',
-    long_description=open('README.md').read(),
+    author="Bas Wind",
+    author_email="mailtobwind+petroleum@gmail.com",
+    description="A pure workflow engine for Python",
+    long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url='https://github.com/bwind/petroleum',
+    url="https://github.com/bwind/petroleum",
     packages=setuptools.find_packages(),
+    install_requires=open("requirements.txt").readlines(),
     classifiers=[
-        'Programming Language :: Python :: 3 :: Only',
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
+        "Programming Language :: Python :: 3 :: Only",
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
     ],
 )

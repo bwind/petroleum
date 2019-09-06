@@ -89,6 +89,38 @@ with description("workflow state"):
                 ).get_state()
             ).to(equal({"task_log": [], "next_task_id": "id"}))
 
+with description("resume with inputs"):
+    with before.each:
+        start_task = ExclusiveChoice()
+        next_task = Task()
+
+        self.tasks = {"start_task": start_task, "next_task": next_task}
+
+        for task in self.tasks.values():
+            task.run = lambda **args: {"success": True}
+        self.tasks["next_task"].is_ready = lambda **args: False
+
+        def task_to_id_mapper(task):
+            for k, v in self.tasks.items():
+                if v == task:
+                    return k
+
+        start_task.connect_if(next_task, lambda *args: False)
+
+        self.workflow = Workflow(
+            start_task=start_task,
+            task_to_id_mapper=task_to_id_mapper,
+            id_to_task_mapper=lambda task_id: self.tasks[task_id],
+        )
+
+    with it("resubmits inputs"):
+        self.workflow.start(example_input="foo")
+        self.workflow.resume()
+
+        expect(self.workflow.state.task_log[-1].status.inputs).to(
+            equal({"example_input": "foo"})
+        )
+
 with description("run workflow"):
     with before.each:
         start_task = Task()
@@ -138,8 +170,8 @@ with description("run workflow"):
                 id_to_task_mapper=lambda task_id: self.tasks[task_id],
                 state=state,
             )
-            expect(len(state["task_log"])).to(equal(2))
+            expect(len(workflow.state.task_log)).to(equal(2))
 
             status = workflow.resume()
             expect(status.status).to(equal(WorkflowStatus.COMPLETED))
-            expect(len(state["task_log"])).to(equal(3))
+            expect(len(workflow.state.task_log)).to(equal(3))
