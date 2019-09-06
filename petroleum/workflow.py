@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from dataclasses import asdict, dataclass
 
@@ -53,7 +52,6 @@ class Workflow(ToJSONMixin):
         return task_status
 
     def _run_tasks(self, task, **inputs):
-        logging.info(f"Running task {task} with inputs {inputs}")
         self.current_task = task
         task_status = self._run_with_log(task, inputs)
         if task_status.status == TaskStatusEnum.COMPLETED:
@@ -82,9 +80,7 @@ class Workflow(ToJSONMixin):
         return asdict(self.state)
 
     def resume(self, **inputs):
-        logging.info(f"Resuming workflow with inputs {inputs}")
         return self._run_tasks(self._get_next_task(), **inputs)
 
     def start(self, **inputs):
-        logging.info(f"Starting workflow with inputs {inputs}")
         return self.resume(**inputs)
