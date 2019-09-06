@@ -38,7 +38,7 @@ class Workflow(ToJSONMixin):
 
     def _init_state(self, state):
         state = state or {}
-        if not hasattr(state, "next_task_id"):
+        if "next_task_id" not in state:
             state["next_task_id"] = self.task_to_id_mapper(self.start_task)
         self.state = WorkflowState(**state)
 

@@ -142,4 +142,4 @@ with description("run workflow"):
 
             status = workflow.resume()
             expect(status.status).to(equal(WorkflowStatus.COMPLETED))
-            expect(len(state["task_log"])).to(equal(4))
+            expect(len(state["task_log"])).to(equal(3))
