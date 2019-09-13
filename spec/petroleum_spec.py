@@ -1,6 +1,7 @@
 from expects import expect, equal, raise_error
 from mamba import before, context, description, it
 from petroleum import Task, Workflow, ExclusiveChoice, WorkflowStatus
+from petroleum.exceptions import WorkflowRecursionError
 
 
 with description("task"):
@@ -21,10 +22,38 @@ with description("task"):
 with description("workflow") as self:
     with before.each:
         self.task = Task()
+        self.task_to_id_mapper = lambda task: "task_id"
+        self.id_to_task_mapper = lambda task_id: self.task
         self.workflow = Workflow(
             start_task=self.task,
-            task_to_id_mapper=lambda task: "task_id",
-            id_to_task_mapper=lambda task_id: self.task,
+            task_to_id_mapper=self.task_to_id_mapper,
+            id_to_task_mapper=self.id_to_task_mapper,
+        )
+
+    with it("detects recursion"):
+
+        class MyTask(Task):
+            def run(self, *args, **kwargs):
+                pass
+
+        def task_to_id_mapper(task):
+            for k, v in self.tasks.items():
+                if v == task:
+                    return k
+
+        task_a = MyTask(id="a")
+        task_b = MyTask(id="b")
+        task_a.connect(task_b)
+        task_b.connect(task_a)
+        self.tasks = {"a": task_a, "b": task_b}
+        workflow = Workflow(
+            start_task=task_a,
+            task_to_id_mapper=task_to_id_mapper,
+            id_to_task_mapper=lambda task_id: self.tasks[task_id],
+        )
+        workflow_status = workflow.start()
+        expect(type(workflow_status.exception)).to(
+            equal(WorkflowRecursionError)
         )
 
     with it("equals to another workflow"):

@@ -9,7 +9,7 @@ class Task(ToJSONMixin):
     id: str = None
     name: str = None
     task_data: dict = None
-    next_task: object = None
+    next_task: str = None
 
     def _run(self, **inputs):
         if not self.is_ready(**inputs):
@@ -27,10 +27,11 @@ class Task(ToJSONMixin):
         return task_result
 
     def connect(self, task):
-        self.next_task = task
+        self.next_task = task.id
+        self._next_task = task
 
     def get_next_task(self, task_status):
-        return self.next_task
+        return getattr(self, "_next_task", None)
 
     def is_ready(self, **inputs):
         return True

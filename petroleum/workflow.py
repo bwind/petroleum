@@ -3,11 +3,15 @@ from dataclasses import asdict, dataclass
 
 from dacite import from_dict
 
+from petroleum.exceptions import WorkflowRecursionError
 from petroleum.json_encoder import ToJSONMixin
 from petroleum.task_status import TaskStatusEnum
 from petroleum.workflow_status import WorkflowStatus
 from petroleum.task_log import TaskLogEntry
 from petroleum.workflow_state import WorkflowState
+
+
+MAX_RECURSION_DEPTH = 5
 
 
 @dataclass
@@ -54,6 +58,16 @@ class Workflow(ToJSONMixin):
         return task_status
 
     def _run_tasks(self, task, **inputs):
+        if not hasattr(self, "_recursion_log"):
+            self._recursion_log = []
+        if self._recursion_log.count(task.id) >= MAX_RECURSION_DEPTH:
+            return WorkflowStatus(
+                status=WorkflowStatus.FAILED,
+                exception=WorkflowRecursionError(
+                    f"Maximum recursion depth ({MAX_RECURSION_DEPTH}) exceeded"
+                ),
+            )
+        self._recursion_log.append(task.id)
         self.current_task = task
         task_status = self._run_with_log(task, inputs)
         if task_status.status == TaskStatusEnum.COMPLETED:

@@ -18,7 +18,7 @@ class ExclusiveChoice(Task):
                 )
             if result is True:
                 return conditional_task.task
-        return self.next_task
+        return getattr(self, "_next_task", None)
 
     def connect_if(self, task, condition):
         conditional_task = ConditionalTask(task=task, condition=condition)
