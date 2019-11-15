@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="petroleum",
-    version="0.0.1",
+    version="0.0.2",
     author="Bas Wind",
     author_email="mailtobwind+petroleum@gmail.com",
     description="A pure workflow engine for Python",
