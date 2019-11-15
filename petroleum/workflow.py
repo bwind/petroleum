@@ -20,6 +20,7 @@ class Workflow(ToJSONMixin):
     id_to_task_mapper: object
     task_to_id_mapper: object = None
     state: object = None
+    _completed: bool = False
 
     def __init__(
         self, start_task, id_to_task_mapper, task_to_id_mapper=None, state=None
@@ -73,6 +74,7 @@ class Workflow(ToJSONMixin):
         if task_status.status == TaskStatusEnum.COMPLETED:
             next_task = task.get_next_task(task_status)
             if next_task is None:
+                self._mark_completed()
                 return WorkflowStatus(
                     status=WorkflowStatus.COMPLETED,
                     outputs=task_status.outputs,
@@ -92,10 +94,18 @@ class Workflow(ToJSONMixin):
     def _get_next_task(self):
         return self.id_to_task_mapper(self.state.next_task_id)
 
+    def _mark_completed(self):
+        self._completed = True
+
+    def is_completed(self):
+        return self._completed
+
     def get_state(self) -> dict:
         return asdict(self.state)
 
     def resume(self, **inputs):
+        if self.is_completed():
+            return
         if len(self.state.task_log) > 0:
             inputs = {**self.state.task_log[-1].status.inputs, **inputs}
         return self._run_tasks(self._get_next_task(), **inputs)

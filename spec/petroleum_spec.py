@@ -79,6 +79,30 @@ with description("workflow") as self:
         )
 
     with context("when resuming"):
+        with it("does not resume when workflow is completed"):
+
+            class MyTask(Task):
+                executed = 0
+
+                def run(self, *args, **kwargs):
+                    MyTask.executed += 1
+
+            def task_to_id_mapper(task):
+                for k, v in self.tasks.items():
+                    if v == task:
+                        return k
+
+            task_a = MyTask(id="a")
+            self.tasks = {"a": task_a}
+            workflow = Workflow(
+                start_task=task_a,
+                task_to_id_mapper=task_to_id_mapper,
+                id_to_task_mapper=lambda task_id: self.tasks[task_id],
+            )
+            expect(workflow.start().status).to(equal(WorkflowStatus.COMPLETED))
+            workflow.resume()
+            expect(MyTask.executed).to(equal(1))
+
         with it("accepts arbitrary keyword arguments as inputs"):
             self.workflow.resume(foo="bar")
 
