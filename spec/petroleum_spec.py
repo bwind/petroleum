@@ -1,6 +1,11 @@
 from expects import expect, equal, raise_error
 from mamba import before, context, description, it
-from petroleum import Task, Workflow, ExclusiveChoice, WorkflowStatus
+from petroleum import (
+    Task,
+    Workflow,
+    ExclusiveChoice,
+    WorkflowStatusEnum,
+)
 from petroleum.exceptions import WorkflowRecursionError
 
 
@@ -99,7 +104,9 @@ with description("workflow") as self:
                 task_to_id_mapper=task_to_id_mapper,
                 id_to_task_mapper=lambda task_id: self.tasks[task_id],
             )
-            expect(workflow.start().status).to(equal(WorkflowStatus.COMPLETED))
+            expect(workflow.start().status).to(
+                equal(WorkflowStatusEnum.COMPLETED)
+            )
             workflow.resume()
             expect(MyTask.executed).to(equal(1))
 
@@ -112,7 +119,9 @@ with description("workflow") as self:
 
         with it("returns suspended workflow status"):
             workflow_status = self.workflow.start()
-            expect(workflow_status.status).to(equal(WorkflowStatus.SUSPENDED))
+            expect(workflow_status.status).to(
+                equal(WorkflowStatusEnum.SUSPENDED)
+            )
 
         with it("returns workflow status with task inputs"):
             inputs = {"foo": "bar"}
@@ -140,7 +149,9 @@ with description("workflow state"):
                     task_to_id_mapper=lambda task: "id",
                     id_to_task_mapper=lambda id: start_task,
                 ).get_state()
-            ).to(equal({"task_log": [], "next_task_id": "id"}))
+            ).to(
+                equal({"task_log": [], "status_log": [], "next_task_id": "id"})
+            )
 
 with description("resume with inputs"):
     with before.each:
@@ -208,7 +219,7 @@ with description("run workflow"):
         with it("returns state"):
             status = self.workflow.start()
 
-            expect(status.status).to(equal(WorkflowStatus.SUSPENDED))
+            expect(status.status).to(equal(WorkflowStatusEnum.SUSPENDED))
 
             state = self.workflow.get_state()
             expect(len(state["task_log"])).to(equal(2))
@@ -226,5 +237,5 @@ with description("run workflow"):
             expect(len(workflow.state.task_log)).to(equal(2))
 
             status = workflow.resume()
-            expect(status.status).to(equal(WorkflowStatus.COMPLETED))
+            expect(status.status).to(equal(WorkflowStatusEnum.COMPLETED))
             expect(len(workflow.state.task_log)).to(equal(3))

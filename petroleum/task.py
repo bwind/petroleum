@@ -15,7 +15,7 @@ class Task(ToJSONMixin):
         if not self.is_ready(**inputs):
             return TaskStatus(status=TaskStatusEnum.WAITING, inputs=inputs)
         try:
-            outputs = self.run(**inputs)
+            outputs = self.run(**inputs) or {}
         except Exception as exc:
             return TaskStatus(
                 status=TaskStatusEnum.FAILED, exception=exc, inputs=inputs

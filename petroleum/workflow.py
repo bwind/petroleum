@@ -6,7 +6,7 @@ from dacite import from_dict
 from petroleum.exceptions import WorkflowRecursionError
 from petroleum.json_encoder import ToJSONMixin
 from petroleum.task_status import TaskStatusEnum
-from petroleum.workflow_status import WorkflowStatus
+from petroleum.workflow_status import WorkflowStatus, WorkflowStatusEnum
 from petroleum.task_log import TaskLogEntry
 from petroleum.workflow_state import WorkflowState
 
@@ -20,7 +20,6 @@ class Workflow(ToJSONMixin):
     id_to_task_mapper: object
     task_to_id_mapper: object = None
     state: object = None
-    _completed: bool = False
 
     def __init__(
         self, start_task, id_to_task_mapper, task_to_id_mapper=None, state=None
@@ -58,15 +57,22 @@ class Workflow(ToJSONMixin):
         log_entry._update_with_status(task_status)
         return task_status
 
+    def _return_workflow_status(self, workflow_status):
+        self.state.status_log.append(workflow_status)
+        return workflow_status
+
     def _run_tasks(self, task, **inputs):
         if not hasattr(self, "_recursion_log"):
             self._recursion_log = []
         if self._recursion_log.count(task.id) >= MAX_RECURSION_DEPTH:
-            return WorkflowStatus(
-                status=WorkflowStatus.FAILED,
-                exception=WorkflowRecursionError(
-                    f"Maximum recursion depth ({MAX_RECURSION_DEPTH}) exceeded"
-                ),
+            return self._return_workflow_status(
+                WorkflowStatus(
+                    status=WorkflowStatusEnum.FAILED,
+                    exception=WorkflowRecursionError(
+                        f"Maximum recursion depth "
+                        f"({MAX_RECURSION_DEPTH}) exceeded"
+                    ),
+                )
             )
         self._recursion_log.append(task.id)
         self.current_task = task
@@ -74,31 +80,40 @@ class Workflow(ToJSONMixin):
         if task_status.status == TaskStatusEnum.COMPLETED:
             next_task = task.get_next_task(task_status)
             if next_task is None:
-                self._mark_completed()
-                return WorkflowStatus(
-                    status=WorkflowStatus.COMPLETED,
-                    outputs=task_status.outputs,
+                return self._return_workflow_status(
+                    WorkflowStatus(
+                        status=WorkflowStatusEnum.COMPLETED,
+                        outputs=task_status.outputs,
+                    )
                 )
             else:
                 self.state.next_task_id = self.task_to_id_mapper(next_task)
                 return self._run_tasks(next_task, **task_status.outputs or {})
         elif task_status.status == TaskStatusEnum.FAILED:
-            return WorkflowStatus(
-                status=WorkflowStatus.FAILED, exception=task_status.exception
+            return self._return_workflow_status(
+                WorkflowStatus(
+                    status=WorkflowStatusEnum.FAILED,
+                    exception=task_status.exception,
+                )
             )
         elif task_status.status == TaskStatusEnum.WAITING:
-            return WorkflowStatus(
-                status=WorkflowStatus.SUSPENDED, inputs=task_status.inputs
+            return self._return_workflow_status(
+                WorkflowStatus(
+                    status=WorkflowStatusEnum.SUSPENDED,
+                    inputs=task_status.inputs,
+                )
             )
 
     def _get_next_task(self):
         return self.id_to_task_mapper(self.state.next_task_id)
 
-    def _mark_completed(self):
-        self._completed = True
-
     def is_completed(self):
-        return self._completed
+        if self.state.status_log:
+            return (
+                self.state.status_log[-1].status
+                == WorkflowStatusEnum.COMPLETED
+            )
+        return False
 
     def get_state(self) -> dict:
         return asdict(self.state)
